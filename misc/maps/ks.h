@@ -11,9 +11,10 @@
 typedef struct ks {
   const char* key;
   InfoType *info;
+  struct ks* prev;
 }key_space;
 
-key_space* ks_init(const uint32_t size);
+key_space* ks_new(const uint32_t size);
 
 void ks_free(key_space* ks, const uint32_t size);
 

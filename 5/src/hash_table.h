@@ -36,6 +36,7 @@ void erase(HashTable *ht, const char* key);
 
 void erase_release(HashTable *ht, const uint32_t key, const uint32_t release);
 
+KeySpace* search(const HashTable *ht, const char* id);
 
 void print(const HashTable *ht);
 

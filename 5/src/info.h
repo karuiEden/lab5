@@ -8,10 +8,11 @@
 #include <graphviz/gvc.h>
 
 typedef struct InfoType {
-    Agnode_t* node;
+    uint8_t color;
+    uint32_t dist;
 } InfoType;
 
-InfoType* info_new(Agnode_t* node);
+InfoType* info_new(uint8_t color, uint32_t dist);
 
 void info_destroy(InfoType* info);
 

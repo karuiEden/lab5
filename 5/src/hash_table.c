@@ -109,32 +109,6 @@ void insert_key(HashTable *ht, Vertex* v) {
     }
 }
 
-void insert_key(HashTable *ht, Vertex *val) {
-    if (!ht) {
-        error = ERR_ALLOC;
-        return;
-    }
-    const uint32_t idx = hash(val->id) % ht->msize;
-    ks_search(ht->ks[idx], val->id);
-    if (!error) {
-        error = INVALID_ELEM;
-        return;
-    }
-    error = OK;
-    KeySpace *k = ks_create(val);
-    if (!k) {
-        error = ERR_ALLOC;
-        return;
-    }
-    k->next = ht->ks[idx];
-    ht->ks[idx] = k;
-    ht->csize++;
-    if (ht->csize == ht->msize) {
-        resize(ht);
-    }
-}
-
-
 
 void erase(HashTable *ht, const char* id) {
     if (!ht || !ht->ks) {
@@ -177,106 +151,15 @@ void print(const HashTable *ht) {
     }
 }
 
-void export(const HashTable *ht, FILE *pf, FILE *sf) {
-    if (!ht || !ht->ks || !pf || !sf) {
+KeySpace* search(const HashTable *ht, const char* id) {
+    if (!ht) {
         error = ERR_PTR;
-        return;
+        return nullptr;
     }
-    uint32_t offset = 0;
-    size_t n = fwrite(&ht->csize, sizeof(uint32_t), 1, pf);
-    if (n != 1) {
-        error = ERR_PTR;
-        return;
-    }
-    for (int i = 0; i < ht->msize; ++i) {
-        const KeySpace *ks_curr = ht->ks[i];
-        while (ks_curr) {
-            const Node *node_curr = ks_curr->node;
-            while (node_curr) {
-                n = fwrite(&ks_curr->key, sizeof(uint32_t), 1, pf);
-                if (n != 1) {
-                    error = ERR_WRITE;
-                    return;
-                }
-                n = fwrite(&offset, sizeof(uint32_t), 1, pf);
-                if (n != 1) {
-                    error = ERR_WRITE;
-                    return;
-                }
-                uint32_t isize = info_size(node_curr->info);
-                n = fwrite(&isize, sizeof(uint32_t), 1, sf);
-                if (n != 1) {
-                    error = ERR_WRITE;
-                    return;
-                }
-                n = info_fwrite(node_curr->info, sf);
-                if (n != 1) {
-                    error = ERR_WRITE;
-                    return;
-                }
-                offset += info_size(node_curr->info) + sizeof(uint32_t);
-                node_curr = node_curr->next;
-            }
-            ks_curr = ks_curr->next;
-        }
-    }
-}
-
-void import(HashTable *ht, FILE *pf, FILE *sf) {
-    if (!ht || !pf || !sf) {
-        error = ERR_PTR;
-        return;
-    }
-    ks_destroy(ht->ks, ht->msize);
-    uint32_t amount;
-    size_t n = fread(&amount, sizeof(uint32_t), 1, pf);
-    if (n != 1) {
-        error = ERR_READ;
-        return;
-    }
-    ht->ks = ks_init(amount);
+    const uint32_t idx = hash(id) % ht->msize;
+    KeySpace* res = ks_search(ht->ks[idx], id);
     if (error) {
-        return;
+        return nullptr;
     }
-    for (int i = 0; i < amount; ++i) {
-        uint32_t key, offset;
-        n = fread(&key, sizeof(uint32_t), 1, pf);
-        if (n != 1) {
-            error = ERR_READ;
-            return;
-        }
-        n = fread(&offset, sizeof(uint32_t), 1, pf);
-        if (n != 1) {
-            error = ERR_READ;
-            return;
-        }
-        uint32_t isize;
-        n = fseek(sf, offset, SEEK_SET);
-        if (n) {
-            error = ERR_SEEK;
-            return;
-        }
-        n = fread(&isize, sizeof(uint32_t), 1, sf);
-        if (n != 1) {
-            error = ERR_READ;
-            return;
-        }
-        char *info_str = calloc(1, isize + 1);
-        n = fread(info_str, sizeof(char), isize, sf);
-        if (n != isize) {
-            error = ERR_READ;
-            return;
-        }
-        info_str[isize] = '\0';
-        InfoType *info = info_init(info_str);
-        if (error) {
-            return;
-        }
-        insert(ht, key, info);
-        if (error) {
-            return;
-        }
-        info_free(info);
-        free(info_str);
-    }
+    return res;
 }

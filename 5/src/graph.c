@@ -4,6 +4,9 @@
 
 #include "graph.h"
 
+#include "queue_list.h"
+#include "maps/table.h"
+
 Graph* new(){
     Graph* g = calloc(1, sizeof(Graph));
     if (!g) {
@@ -161,3 +164,152 @@ void print_graph_console(Graph* g) {
     }
     print(g->adj_lists);
 }
+
+Table* bfs(Graph* g, Vertex* s) {
+    if (!g) {
+        error = ERR_PTR;
+        return nullptr;
+    }
+    Table* t = init(g->adj_lists->csize);
+    if (!t) {
+        error = ERR_ALLOC;
+        return nullptr;
+    }
+    for (uint32_t i = 0; i < g->adj_lists->msize; ++i) {
+        KeySpace* ks = g->adj_lists->ks[i];
+        while (ks) {
+            InfoType* info = info_new(white, UINT32_MAX);
+            if (!info) {
+                error = ERR_ALLOC;
+                delete(t);
+                return nullptr;
+            }
+            t_insert(t, ks->vertex->id, info);
+            info_destroy(info);
+            ks = ks->next;
+        }
+    }
+    const uint32_t idx = binary_search(t->keySpace, s->id, 0, t->csize - 1);
+    if (error) {
+        delete(t);
+    }
+    t->keySpace[idx].info->color = gray;
+    t->keySpace[idx].info->dist = 0;
+    queue* q = queue_init();
+    if (!q) {
+        delete(t);
+        return nullptr;
+    }
+    queue_insert(q, &t->keySpace[idx]);
+    while (q->tail) {
+        key_space* u = queue_read(q);
+        KeySpace* u_adj = search(g->adj_lists, u->key);
+        if (!u_adj) {
+            error = ERR_PTR;
+            queue_delete(q);
+            delete(t);
+            return nullptr;
+        }
+        AdjNode* adj = u_adj->adj->head;
+        while (adj) {
+            const uint32_t idx_v = binary_search(t->keySpace, adj->vertex->id, 0, t->csize - 1);
+            if (error) {
+                delete(t);
+            }
+            if (t->keySpace[idx_v].info->color == white) {
+                t->keySpace[idx_v].info->color = gray;
+                t->keySpace[idx_v].info->dist = u->info->dist + 1;
+                t->keySpace[idx_v].prev = u;
+                queue_insert(q, &t->keySpace[idx_v]);
+            }
+            adj = adj->next;
+        }
+        u->info->color = black;
+    }
+    return t;
+}
+
+void shortest_path(Graph* g, Vertex* s, Vertex* to) {
+    if (!g || !s || !to) {
+        error = ERR_PTR;
+        return;
+    }
+    Table* t = init(g->adj_lists->csize);
+    if (!t) {
+        error = ERR_ALLOC;
+        return;
+    }
+    for (uint32_t i = 0; i < g->adj_lists->msize; ++i) {
+        KeySpace* ks = g->adj_lists->ks[i];
+        while (ks) {
+            InfoType* info = info_new(white, UINT32_MAX);
+            if (!info) {
+                error = ERR_ALLOC;
+                delete(t);
+                return;
+            }
+            t_insert(t, ks->vertex->id, info);
+            info_destroy(info);
+            ks = ks->next;
+        }
+    }
+    for (int i = 0; i < g->adj_lists->csize - 1; ++i) {
+        KeySpace* ks = g->adj_lists->ks[i];
+        const uint32_t idx_u = binary_search(t->keySpace, ks->vertex->id, 0, t->csize - 1);
+        if (error) {
+            delete(t);
+        }        while (ks) {
+           AdjNode* adj = ks->adj->head;
+            while (adj) {
+                const uint32_t idx_v = binary_search(t->keySpace, adj->vertex->id, 0, t->csize - 1);
+                if (error) {
+                    delete(t);
+                    return;
+                }
+                if (t->keySpace[idx_v].info->dist > t->keySpace[idx_u].info->dist + 1) {
+                    t->keySpace[idx_v].info->dist = t->keySpace[idx_u].info->dist + 1;
+                    t->keySpace[idx_v].prev = &t->keySpace[idx_u];
+                }
+                adj = adj->next;
+            }
+            ks = ks->next;
+        }
+    }
+    for (int i = 0; i < g->adj_lists->csize - 1; ++i) {
+        KeySpace* ks = g->adj_lists->ks[i];
+        const uint32_t idx_u = binary_search(t->keySpace, ks->vertex->id, 0, t->csize - 1);
+        if (error) {
+            delete(t);
+        }
+        while (ks) {
+            AdjNode* adj = ks->adj->head;
+            while (adj) {
+                const uint32_t idx_v = binary_search(t->keySpace, adj->vertex->id, 0, t->csize - 1);
+                if (error) {
+                    delete(t);
+                    return;
+                }
+                if (t->keySpace[idx_v].info->dist > t->keySpace[idx_u].info->dist + 1) {
+                   error = N_CYCLE;
+                    delete(t);
+                    return;
+                }
+                adj = adj->next;
+            }
+            ks = ks->next;
+        }
+    }
+    const uint32_t idx_to = binary_search(t->keySpace, to->id, 0, t->csize - 1);
+    if (t->keySpace[idx_to].info->dist == INT32_MAX) {
+        error = INVALID_VERTEX;
+        delete(t);
+        return;
+    }
+    const uint32_t idx_from = binary_search(t->keySpace, s->id, 0, t->csize - 1);
+    for (const key_space* i = &t->keySpace[idx_to]; i != &t->keySpace[idx_from] ; i = i->prev) {
+        printf("%s <- ", i->key);
+    }
+    printf("%s\n", t->keySpace[idx_from].key);
+    delete(t);
+}
+

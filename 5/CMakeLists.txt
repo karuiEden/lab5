@@ -26,6 +26,7 @@ add_library(GRAPH STATIC
         src/graphic_out.c
         src/info.c
         src/info.h
+        src/queue_list.c
 
 
 )

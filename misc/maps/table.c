@@ -17,7 +17,7 @@ Table *init(const uint32_t size) {
     }
     t->csize = 0;
     t->msize = size;
-    t->keySpace = ks_init(size);
+    t->keySpace = ks_new(size);
     if (error != OK) {
         delete(t);
         return nullptr;

@@ -33,19 +33,11 @@ uint32_t binary_search(const key_space *ks, const char* key, int32_t l, int32_t 
 
 }
 
-key_space ks_default() {
-    return (key_space){nullptr, nullptr};
-}
-
-key_space* ks_init(const uint32_t size) {
+key_space* ks_new(const uint32_t size) {
     key_space* ks = calloc(size, sizeof(key_space));
     if (!ks) {
         error = ERR_ALLOC;
         return nullptr;
-    }
-    for (int i = 0; i < size; ++i) {
-        ks[i].info = nullptr;
-        ks[i].key = nullptr;
     }
     return ks;
 }
@@ -58,6 +50,7 @@ key_space ks_create(const char* key, InfoType* info) {
     key_space res;
     res.key = strdup(key);
     res.info = info;
+    res.prev = nullptr;
     return res;
 }
 
@@ -67,6 +60,7 @@ void ks_delete(key_space* ks) {
     }
     info_destroy(ks->info);
     ks->info = nullptr;
+    ks->prev = nullptr;
 }
 
 void ks_free(key_space* ks, const uint32_t size) {
