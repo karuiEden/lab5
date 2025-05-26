@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <io/io.h>
 
+#include "error/error_handle.h"
+
 Table *init(const uint32_t size) {
     Table *t = calloc(sizeof(Table), 1);
     if (!t) {
@@ -32,7 +34,7 @@ void delete(Table *t) {
     free(t);
 }
 
-void t_insert(Table *t, const uint32_t key, const InfoType* value) {
+void t_insert(Table *t, const char* key, InfoType* value) {
     if (t->csize == t->msize){
         error = TABLE_FULL;
         return;
@@ -49,12 +51,12 @@ void t_insert(Table *t, const uint32_t key, const InfoType* value) {
         t->keySpace[index].info = t->keySpace[index - 1].info;
         --index;
     }
-    t->keySpace[index].key = key;
-    t->keySpace[index].info = info_copy(value);
+    t->keySpace[index].key = strdup(key);
+    t->keySpace[index].info = value;
     t->csize++;
 }
 
-InfoType *t_search(Table *t, const uint32_t key) {
+InfoType *t_search(Table *t, const char* key) {
     if (!t || !key || !t->keySpace) {
         error = ERR_PTR;
         return nullptr;
@@ -70,7 +72,7 @@ InfoType *t_search(Table *t, const uint32_t key) {
     return t->keySpace[index].info;
 }
 
-void t_erase(Table *t, const uint32_t key) {
+void t_erase(Table *t, const char* key) {
     if (!t || !key || !t->keySpace) {
         error = ERR_PTR;
         return;

@@ -2,9 +2,8 @@
 // Created by karui on 3/23/2025.
 //
 
-#include "key_space.h"
+#include "ks.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <error/error_handle.h>
 
@@ -12,17 +11,17 @@
 
 
 
-uint32_t binary_search(const KeySpace *ks, const uint32_t key, int32_t l, int32_t r) {
+uint32_t binary_search(const key_space *ks, const char* key, int32_t l, int32_t r) {
     if (!ks) {
         error = ERR_PTR;
         return -1;
     }
     uint32_t mid = (l + r) / 2;
     while (l<=r) {
-        if (key == ks[mid].key) {
+        if (!strcmp(key, ks[mid].key)) {
             return mid;
         }
-        if (key > ks[mid].key) {
+        if (strcmp(key, ks[mid].key) > 0) {
             l = mid + 1;
         } else {
             r = mid - 1;
@@ -34,50 +33,46 @@ uint32_t binary_search(const KeySpace *ks, const uint32_t key, int32_t l, int32_
 
 }
 
-KeySpace ks_default() {
-    return (KeySpace){0, nullptr};
+key_space ks_default() {
+    return (key_space){nullptr, nullptr};
 }
 
-KeySpace* ks_init(const uint32_t size) {
-    KeySpace* ks = calloc(size, sizeof(KeySpace));
+key_space* ks_init(const uint32_t size) {
+    key_space* ks = calloc(size, sizeof(key_space));
     if (!ks) {
         error = ERR_ALLOC;
         return nullptr;
     }
     for (int i = 0; i < size; ++i) {
         ks[i].info = nullptr;
-        ks[i].key = 0;
+        ks[i].key = nullptr;
     }
     return ks;
 }
 
-KeySpace ks_create(const uint32_t key, const InfoType* info) {
+key_space ks_create(const char* key, InfoType* info) {
     if (!key || !info) {
         error = ERR_PTR;
         return ks_default();
     }
-    KeySpace res;
-    res.key = key;
-    res.info = info_copy(info);
+    key_space res;
+    res.key = strdup(key);
+    res.info = info;
     return res;
 }
 
-void ks_delete(KeySpace* ks) {
+void ks_delete(key_space* ks) {
     if (!ks || !ks->info) {
         return;
     }
-    info_delete(ks->info);
+    info_destroy(ks->info);
     ks->info = nullptr;
 }
 
-void ks_free(KeySpace* ks, const uint32_t size) {
+void ks_free(key_space* ks, const uint32_t size) {
     for (uint32_t i = 0; i < size; ++i) {
         ks_delete(&ks[i]);
     }
     free(ks);
 }
 
-void ks_print(const KeySpace* ks) {
-    printf("Key: %u ", ks->key);
-    info_print(ks->info);
-}
