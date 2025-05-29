@@ -14,7 +14,7 @@ void menu(const func_vec funcs, structure *value) {
             printf("%d. %s\n", i + 1, funcs.msg[i]);
         }
         printf("0. Exit\n");
-        ch = read_uint32(stdin, nullptr, "Введите числа, указанные в меню", uint_check_9);
+        ch = read_uint32(stdin, nullptr, "Введите числа, указанные в меню", uint_check_11);
         if (error == EOF || ch == 0) break;
         funcs.functions[ch - 1](value);
     }

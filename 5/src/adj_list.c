@@ -22,6 +22,9 @@ AdjList* list_new() {
 }
 
 void list_destroy(AdjList* l) {
+    if (!l) {
+        return;
+    }
     AdjNode* node = l->head;
     while (node) {
         AdjNode* prev = node;
@@ -42,6 +45,7 @@ AdjNode* list_search(AdjList* adj, const char* id) {
         if (!strcmp(id, ptr->vertex->id)) {
             return ptr;
         }
+        ptr = ptr->next;
     }
     error = INVALID_EDGE;
     return nullptr;
@@ -60,6 +64,11 @@ void list_insert(AdjList* adj, Vertex* v) {
         adj->head = node;
         return;
     }
+    if (strcmp(adj->head->vertex->id, v->id) > 0) {
+        node->next = adj->head;
+        adj->head = node;
+        return;
+    }
     AdjNode* ptr = adj->head, *prev = ptr;
     while (ptr) {
         if (strcmp(v->id, ptr->vertex->id) == 0) {
@@ -73,8 +82,8 @@ void list_insert(AdjList* adj, Vertex* v) {
         prev = ptr;
         ptr = ptr->next;
     }
+    node->next = prev->next;
     prev->next = node;
-    node->next = ptr;
 }
 
 void list_erase(AdjList* adj, const char* id) {

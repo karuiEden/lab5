@@ -6,9 +6,9 @@
 #define MENU_H
 #include <stdint.h>
 
-#include "btree.h"
+#include "graph.h"
 
-typedef BTree structure;
+typedef Graph structure;
 typedef void (*func)(structure *);
 
 typedef struct {

@@ -39,24 +39,20 @@ void resize(HashTable *ht) {
     for (uint32_t i = 0; i < ht->msize; ++i) {
         KeySpace *k_curr = ht->ks[i];
         while (k_curr) {
-            Node *n_curr = k_curr->node;
-            while (n_curr) {
-                const uint32_t idx = hash(k_curr->key) % new_size;
-                ks_search(new_ks[idx], k_curr->key);
-                if (!error) {
-                    ks_extend(new_ks[idx], n_curr->info);
-                    return;
-                }
-                error = OK;
-                KeySpace *k = ks_create(k_curr->key, n_curr->info);
-                if (!k) {
-                    error = ERR_ALLOC;
-                    return;
-                }
-                k->next = new_ks[idx];
-                new_ks[idx] = k;
-                n_curr = n_curr->next;
+            const uint32_t idx = hash(k_curr->vertex->id) % new_size;
+            ks_search(new_ks[idx], k_curr->vertex->id);
+            error = OK;
+            KeySpace *k = ks_create(k_curr->vertex);
+            if (!k) {
+                error = ERR_ALLOC;
+                return;
             }
+            list_destroy(k->adj);
+            k->adj = k_curr->adj;
+            k_curr->adj = nullptr;
+            k_curr->vertex = nullptr;
+            k->next = new_ks[idx];
+            new_ks[idx] = k;
             k_curr = k_curr->next;
         }
     }

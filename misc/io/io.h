@@ -17,7 +17,11 @@ double read_double(FILE* stream ,const char *promt, const char *promt_error, boo
 
 uint32_t read_uint32(FILE* stream ,const char *promt, const char *promt_error, bool (*check)(uint32_t));
 
+bool uint_check_10(const uint32_t value);
+
 bool int_positive_number(const int a);
+
+bool uint_check_11(const uint32_t value);
 
 bool int_any_number(const int a);
 

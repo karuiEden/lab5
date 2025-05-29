@@ -10,6 +10,6 @@
 
 #include "graph.h"
 
-void print(Graph* t);
+void print_graphic(Graph* gd, key_space* add_info);
 
 #endif //GRAPHIC_OUT_H

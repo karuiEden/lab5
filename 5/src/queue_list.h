@@ -16,8 +16,9 @@ typedef struct queue{
     queue_node *tail;
 } queue;
 
+key_space* extract_min(queue *q);
 
-
+bool in_queue(queue *q, const char* value);
 
 enum capacity{
     FULL = -3,

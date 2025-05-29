@@ -10,7 +10,7 @@
 #include "error/error_handle.h"
 
 Table *init(const uint32_t size) {
-    Table *t = calloc(sizeof(Table), 1);
+    Table *t = calloc(1, sizeof(Table));
     if (!t) {
         error = ERR_ALLOC;
         return nullptr;
@@ -34,7 +34,7 @@ void delete(Table *t) {
     free(t);
 }
 
-void t_insert(Table *t, const char* key, InfoType* value) {
+void t_insert(Table *t, const char* key, const InfoType* value) {
     if (t->csize == t->msize){
         error = TABLE_FULL;
         return;
@@ -46,17 +46,19 @@ void t_insert(Table *t, const char* key, InfoType* value) {
     }
     error = OK;
     uint32_t index = t->csize;
-    while(index > 0 && t->keySpace[index - 1].key > key){
-        t->keySpace[index].key = t->keySpace[index - 1].key;
-        t->keySpace[index].info = t->keySpace[index - 1].info;
+    while(index > 0 && strcmp(t->keySpace[index - 1]->key, key) > 0){
+        t->keySpace[index] = t->keySpace[index - 1];
         --index;
     }
-    t->keySpace[index].key = strdup(key);
-    t->keySpace[index].info = value;
+    key_space* ks = map_ks_create(key, value);
+    if (error) {
+        return;
+    }
+    t->keySpace[index] = ks;
     t->csize++;
 }
 
-InfoType *t_search(Table *t, const char* key) {
+key_space* t_search(Table *t, const char* key) {
     if (!t || !key || !t->keySpace) {
         error = ERR_PTR;
         return nullptr;
@@ -69,7 +71,7 @@ InfoType *t_search(Table *t, const char* key) {
     if (error) {
         return nullptr;
     }
-    return t->keySpace[index].info;
+    return t->keySpace[index];
 }
 
 void t_erase(Table *t, const char* key) {
@@ -83,23 +85,22 @@ void t_erase(Table *t, const char* key) {
     }
     const uint32_t idx = binary_search(t->keySpace, key, 0, t->csize - 1);
     if (error) return;
-    ks_delete(&t->keySpace[idx]);
+    map_ks_delete(t->keySpace[idx]);
     for (uint32_t i = idx; i < t->csize - 1; ++i) {
-        t->keySpace[i].key = t->keySpace[i + 1].key;
-        t->keySpace[i].info = t->keySpace[i + 1].info;
+        t->keySpace[i] = t->keySpace[i + 1];
     }
     if (t->csize > 1) {
-        t->keySpace[t->csize - 1].info = nullptr;
+        t->keySpace[t->csize - 1] = nullptr;
     }
     t->csize--;
 }
 
-void t_print(Table *t) {
-    if (!t || !t->keySpace) {
-        return;
-    }
-    for (uint32_t i = 0; i < t->csize; ++i) {
-        ks_print(&t->keySpace[i]);
-        printf("; ");
-    }
-}
+// void t_print(Table *t) {
+//     if (!t || !t->keySpace) {
+//         return;
+//     }
+//     for (uint32_t i = 0; i < t->csize; ++i) {
+//         map_ks_print(t->keySpace[i]);
+//         printf("; ");
+//     }
+// }

@@ -42,6 +42,69 @@ void queue_insert(queue *queue, key_space* value){
     queue->tail = new_node;
 }
 
+
+
+key_space* extract_min(queue *q) {
+    if (!q) {
+        error = ERR_PTR;
+        return nullptr;
+    }
+    if (!q->tail) {
+        error = FREE;
+        return nullptr;
+    }
+    queue_node *min_data_ptr = nullptr, *data_ptr = q->tail->next, *prev = nullptr, *prev_min = nullptr;
+    if (data_ptr->next == data_ptr) {
+        key_space *data = data_ptr->ks;
+        free(q->tail);
+        q->tail = nullptr;
+        return data;
+    }
+    uint32_t min_dist = UINT32_MAX;
+    do {
+        if (data_ptr->ks->info->dist < min_dist) {
+            min_dist = data_ptr->ks->info->dist;
+            min_data_ptr = data_ptr;
+            prev_min = prev;
+        }
+        prev = data_ptr;
+        data_ptr = data_ptr->next;
+    } while (prev != q->tail);
+    if (min_data_ptr == q->tail) {
+        q->tail = prev_min;
+        key_space *data = min_data_ptr->ks;
+        free(min_data_ptr);
+        return data;
+    }
+    if (prev_min) {
+        prev_min->next = min_data_ptr->next;
+    } else {
+        q->tail->next = min_data_ptr->next;
+    }
+    key_space *data = min_data_ptr->ks;
+    free(min_data_ptr);
+    return data;
+}
+
+bool in_queue(queue *q, const char* value) {
+    if (!q || !value) {
+        error = ERR_PTR;
+        return false;
+    }
+    if (!q->tail) {
+        error = FREE;
+        return false;
+    }
+    queue_node *ptr = q->tail->next;
+    do {
+        if (!strcmp(ptr->ks->key, value)) {
+            return true;
+        }
+        ptr = ptr->next;
+    } while (ptr != q->tail->next);
+    return false;
+}
+
 key_space* queue_read(queue *q){
     if(!q->tail){
         return nullptr;

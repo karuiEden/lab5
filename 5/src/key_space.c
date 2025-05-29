@@ -9,6 +9,7 @@
 #include <error/error_handle.h>
 
 #include "hash_table.h"
+#include "maps/table.h"
 
 
 KeySpace **ks_init(uint32_t size) {
@@ -50,7 +51,6 @@ KeySpace* ks_search(KeySpace *ks, const char* id) {
 }
 
 
-
 void ks_delete(KeySpace* ks) {
     if (!ks) {
         return;
@@ -85,6 +85,7 @@ void ks_print(KeySpace* ks) {
     while (ks_curr) {
         printf("Vertex: %s: ", ks_curr->vertex->id);
         list_print(ks_curr->adj);
+        printf("\n");
         ks_curr = ks_curr->next;
         ++i;
     }

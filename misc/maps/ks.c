@@ -11,17 +11,17 @@
 
 
 
-uint32_t binary_search(const key_space *ks, const char* key, int32_t l, int32_t r) {
+uint32_t binary_search(key_space **ks, const char* key, int32_t l, int32_t r) {
     if (!ks) {
         error = ERR_PTR;
         return -1;
     }
     uint32_t mid = (l + r) / 2;
     while (l<=r) {
-        if (!strcmp(key, ks[mid].key)) {
+        if (!strcmp(key, ks[mid]->key)) {
             return mid;
         }
-        if (strcmp(key, ks[mid].key) > 0) {
+        if (strcmp(key, ks[mid]->key) > 0) {
             l = mid + 1;
         } else {
             r = mid - 1;
@@ -33,8 +33,8 @@ uint32_t binary_search(const key_space *ks, const char* key, int32_t l, int32_t 
 
 }
 
-key_space* ks_new(const uint32_t size) {
-    key_space* ks = calloc(size, sizeof(key_space));
+key_space** ks_new(const uint32_t size) {
+    key_space** ks = calloc(size, sizeof(key_space*));
     if (!ks) {
         error = ERR_ALLOC;
         return nullptr;
@@ -42,30 +42,36 @@ key_space* ks_new(const uint32_t size) {
     return ks;
 }
 
-key_space ks_create(const char* key, InfoType* info) {
+key_space* map_ks_create(const char* key, InfoType* info) {
     if (!key || !info) {
         error = ERR_PTR;
-        return ks_default();
+        return nullptr;
     }
-    key_space res;
-    res.key = strdup(key);
-    res.info = info;
-    res.prev = nullptr;
+    key_space *res = calloc(1, sizeof(key_space));
+    if (!res) {
+        error = ERR_ALLOC;
+        return nullptr;
+    }
+    res->key = strdup(key);
+    res->info = info;
+    res->prev = nullptr;
     return res;
 }
 
-void ks_delete(key_space* ks) {
+void map_ks_delete(key_space* ks) {
     if (!ks || !ks->info) {
         return;
     }
     info_destroy(ks->info);
+    free(ks->key);
     ks->info = nullptr;
     ks->prev = nullptr;
+    free(ks);
 }
 
-void ks_free(key_space* ks, const uint32_t size) {
+void ks_free(key_space** ks, const uint32_t size) {
     for (uint32_t i = 0; i < size; ++i) {
-        ks_delete(&ks[i]);
+        map_ks_delete(ks[i]);
     }
     free(ks);
 }

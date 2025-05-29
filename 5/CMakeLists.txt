@@ -13,7 +13,7 @@ include_directories("src")
 add_library(IO SHARED ../misc/io/io.c)
 add_library(ERROR SHARED ../misc/error/error_handle.c)
 add_library(MENU SHARED ../misc/menu/menu.c)
-
+add_library(TABLE STATIC ../misc/maps/table.c ../misc/maps/ks.c)
 add_library(GRAPH STATIC
         src/vertex.c
         src/vertex.h
@@ -21,18 +21,22 @@ add_library(GRAPH STATIC
         src/graph.h
         src/graph.h
         src/hash_table.c
+        src/key_space.c
         src/adj_node.c
         src/adj_node.h
-        src/graphic_out.c
+        src/adj_list.c
         src/info.c
         src/info.h
         src/queue_list.c
+        src/graphic_out.c
 
 
 )
-set(CMAKE_C_FLAGS "-O0")
+set(CMAKE_C_FLAGS "-O3")
 
 add_executable(lab5
         main.c
+        src/graph_wrapper.c
+        src/graph_wrapper.h
 )
-target_link_libraries(lab5 IO ERROR GRAPH MENU ${GVC_LIB} ${CGRAPH_LIB})
+target_link_libraries(lab5 IO ERROR GRAPH TABLE MENU ${GVC_LIB} ${CGRAPH_LIB})

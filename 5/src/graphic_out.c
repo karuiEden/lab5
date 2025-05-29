@@ -9,7 +9,7 @@
 #include "vertex.h"
 
 
-void link_graph(Graph* gd, Agraph_t* gg) {
+void link_graph(Graph* gd, Agraph_t* gg, key_space* add_info) {
     if (!gd || !gg) {
         return;
     }
@@ -26,12 +26,13 @@ void link_graph(Graph* gd, Agraph_t* gg) {
                     agsafeset(n, "color", "red", "");
                 }
             }
-            agsafeset(n, "fillcolor", "", "");
-            InfoType* info = info_new(n);
+            InfoType* info = info_new(0, 0);
+            info->g_node = n;
             t_insert(t, ks->vertex->id, info);
             ks = ks->next;
         }
     }
+
     for (uint32_t i = 0; i < gd->adj_lists->msize; ++i) {
         KeySpace* ks = gd->adj_lists->ks[i];
         while (ks) {
@@ -41,40 +42,62 @@ void link_graph(Graph* gd, Agraph_t* gg) {
             }
             AdjNode* node = adj->head;
             while (node) {
-               InfoType* to = t_search(t, node->vertex->id);
-                agedge(gg, t_search(t, ks->vertex->id)->node, to->node, nullptr, 1);
+                key_space* from = t_search(t, ks->vertex->id);
+               key_space* to = t_search(t, node->vertex->id);
+                if (strcmp(from->key, to->key) < 0) {
+                    Agedge_t *edge = agedge(gg, from->info->g_node, to->info->g_node, nullptr, 1);
+                    if (add_info) {
+                        key_space* ptr = add_info;
+                        while (ptr && strcmp(ptr->key, from->key) != 0) {
+                            ptr = ptr->prev;
+                        }
+                        if (ptr && ptr->prev) {
+                            if (strcmp(ptr->prev->key, to->key) == 0) {
+                                agsafeset(edge, "color", "red", "");
+                            }
+                        }
+                    }
+                }
+                node = node->next;
             }
             ks = ks->next;
             }
         }
+    delete(t);
 }
 
-void print(Graph* gd) {
+void print_graphic(Graph* gd, key_space* add_info) {
     if (!gd) {
         error = ERR_PTR;
         return;
     }
     GVC_t *gvc = gvContext();
-    Agraph_t *g = agopen("graph", Agdirected, nullptr);
+    Agraph_t *g = agopen("graph", Agundirected, nullptr);
+    agsafeset(g, "overlap", "scale", "");
+    agsafeset(g, "sep", "0.1", "");
+    agsafeset(g, "len", "2", "");
+    // agsafeset(g, "ranksep", "1", "");
+    // agsafeset(g, "nodesep", "0.25", "");
+
     if (!g) {
         error = ERR_ALLOC;
         gvFreeContext(gvc);
         return;
     }
-    link_graph(gd, g);
-    if (gvLayout(gvc, g, "dot")) {
+    link_graph(gd, g, add_info);
+    if (gvLayout(gvc, g, "sfdp")) {
         gvFreeLayout(gvc, g);
         agclose(g);
         gvFreeContext(gvc);
         error = ERR_ALLOC;
         return;
     }
-    if (gvRenderFilename(gvc, g, "png", "tbst.png")) {
+    if (gvRenderFilename(gvc, g, "png", "graph.png")) {
         error = ERR_ALLOC;
     }
     gvFreeLayout(gvc, g);
     agclose(g);
     gvFreeContext(gvc);
-    if (!error) system("catimg tbst.png");
+    // if (!error) system("catimg graph.png");
 }
 

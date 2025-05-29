@@ -138,6 +138,14 @@ bool uint_check_7(const uint32_t value){
     return value < 8;
 }
 
+bool uint_check_11(const uint32_t value){
+    return value < 12;
+}
+
+bool uint_check_10(const uint32_t value){
+    return value < 11;
+}
+
 bool uint_check_8(const uint32_t value){
     return value < 9;
 }

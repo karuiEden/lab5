@@ -9,22 +9,22 @@
 #include "info.h"
 #include "../src/info.h"
 typedef struct ks {
-  const char* key;
+  char* key;
   InfoType *info;
   struct ks* prev;
 }key_space;
 
-key_space* ks_new(const uint32_t size);
+key_space** ks_new(const uint32_t size);
 
-void ks_free(key_space* ks, const uint32_t size);
+void ks_free(key_space** ks, const uint32_t size);
 
-uint32_t binary_search(const key_space *ks, const char* key, int32_t l, int32_t r);
+uint32_t binary_search(key_space **ks, const char* key, int32_t l, int32_t r);
 
-void ks_delete(key_space* ks);
+void map_ks_delete(key_space* ks);
 
-key_space ks_create(const char* key, const InfoType* info);
+key_space* map_ks_create(const char* key, InfoType* info);
 
-void ks_print(const key_space* ks);
+void map_ks_print(const key_space* ks);
 
 
 #endif //KS_H

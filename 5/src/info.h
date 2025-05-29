@@ -8,8 +8,10 @@
 #include <graphviz/gvc.h>
 
 typedef struct InfoType {
+    // Как и цвет в BFS, так и тип вершины
     uint8_t color;
-    uint32_t dist;
+    uint64_t dist;
+    Agnode_t* g_node;
 } InfoType;
 
 InfoType* info_new(uint8_t color, uint32_t dist);
