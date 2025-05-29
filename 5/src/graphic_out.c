@@ -47,12 +47,16 @@ void link_graph(Graph* gd, Agraph_t* gg, key_space* add_info) {
                 if (strcmp(from->key, to->key) < 0) {
                     Agedge_t *edge = agedge(gg, from->info->g_node, to->info->g_node, nullptr, 1);
                     if (add_info) {
-                        key_space* ptr = add_info;
-                        while (ptr && strcmp(ptr->key, from->key) != 0) {
-                            ptr = ptr->prev;
+                        key_space* from_path = add_info;
+                        while (from_path && strcmp(from_path->key, from->key) != 0) {
+                            from_path = from_path->prev;
                         }
-                        if (ptr && ptr->prev) {
-                            if (strcmp(ptr->prev->key, to->key) == 0) {
+                        key_space* to_path = add_info;
+                        while (to_path && strcmp(to_path->key, to->key) != 0) {
+                            to_path = to_path->prev;
+                        }
+                        if (from_path && to_path) {
+                            if (from_path->prev == to_path || to_path->prev == from_path) {
                                 agsafeset(edge, "color", "red", "");
                             }
                         }
